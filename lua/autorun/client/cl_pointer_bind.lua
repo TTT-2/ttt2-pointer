@@ -2,10 +2,14 @@
 local function StartPointer(isGlobal)
 	local client = LocalPlayer()
 
+	local ignore = {client}
+	local spos = client:GetShootPos()
+	local epos = spos + client:GetAimVector() * 10000
+
 	local tr = util.TraceLine({
-		start = client:EyePos(),
-		endpos = client:EyePos() + EyeAngles():Forward() * 1000,
-		filter = {client},
+		start = spos,
+		endpos = epos,
+		filter = ignore,
 		mask = MASK_SOLID
 	})
 
