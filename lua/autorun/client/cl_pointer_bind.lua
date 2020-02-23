@@ -16,6 +16,7 @@ local function StartPointer(isGlobal)
 	net.Start("ttt2_pointer_request")
 	net.WriteBool(isGlobal)
 	net.WriteVector(tr.HitPos)
+	net.WriteVector(tr.HitNormal)
 	net.WriteEntity(tr.Entity)
 	net.SendToServer()
 end
