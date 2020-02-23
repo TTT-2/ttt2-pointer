@@ -1,21 +1,31 @@
 util.AddNetworkString("ttt2_pointer_request")
 util.AddNetworkString("ttt2_pointer_push")
 
+local MODE_GLOBAL = 0
+local MODE_TEAM = 1
+local MODE_SPEC = 2
+
 net.Receive("ttt2_pointer_request", function(len, ply)
 	local isGlobal = net.ReadBool()
 	local trPos = net.ReadVector()
 	local trNormal = net.ReadVector()
 	local trEnt = net.ReadEntity()
 	local texAngle = 0
+	local mode = isGlobal and MODE_GLOBAL or MODE_TEAM
 
 	-- special handling for post and prep time
 	if GetRoundState() ~= ROUND_ACTIVE then
-		isGlobal = true
+		mode = MODE_GLOBAL
 	end
 
 	-- special handling for innocent team
 	if ply:GetTeam() == TEAM_INNOCENT then
-		isGlobal = true
+		mode = MODE_GLOBAL
+	end
+
+	-- special handling for spectators
+	if ply:IsSpec() then
+		mode = MODE_SPEC
 	end
 
 	-- if the pointer is on a surface, check if it should be
@@ -34,7 +44,18 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 
 	local playersToNotify = {}
 
-	if isGlobal then
+	if mode == MODE_SPEC then
+		local players = player.GetAll()
+
+		for i = 1, #players do
+			local p = players[i]
+
+			-- show only to spectators
+			if not p:IsSpec() then continue end
+
+			playersToNotify[#playersToNotify + 1] = p
+		end
+	elseif mode == MODE_GLOBAL then
 		playersToNotify = player.GetAll()
 	else
 		local players = player.GetAll()
@@ -42,7 +63,8 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 		for i = 1, #players do
 			local p = players[i]
 
-			if p:GetTeam() ~= ply:GetTeam() then continue end
+			-- show only to teammates and spectators
+			if p:GetTeam() ~= ply:GetTeam() and not p:IsSpec() then continue end
 
 			playersToNotify[#playersToNotify + 1] = p
 		end
@@ -57,7 +79,7 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 	end
 
 	net.Start("ttt2_pointer_push")
-	net.WriteBool(isGlobal)
+	net.WriteUInt(mode, 2)
 	net.WriteVector(trPos)
 	net.WriteVector(trNormal)
 	net.WriteEntity(trEnt)
