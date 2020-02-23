@@ -13,6 +13,8 @@ local function StartPointer(isGlobal)
 		mask = MASK_SOLID
 	})
 
+	if tr.HitSky then return end
+
 	net.Start("ttt2_pointer_request")
 	net.WriteBool(isGlobal)
 	net.WriteVector(tr.HitPos)

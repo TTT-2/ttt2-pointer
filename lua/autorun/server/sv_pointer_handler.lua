@@ -82,4 +82,6 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 	net.WriteEntity(ply)
 	net.WriteFloat(texAngle)
 	net.Send(playersToNotify)
+
+	LANG.Msg(playersToNotify, "ttt2_pointer_new", {playername = ply:Nick()}, MSG_MSTACK_PLAIN)
 end)

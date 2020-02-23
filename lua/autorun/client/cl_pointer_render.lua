@@ -11,8 +11,8 @@ surface.CreateFont("Pointer2DText", {font = "Trebuchet24", size = 24, weight = 9
 surface.CreateFont("PointerTextNick", {font = "Trebuchet24", size = 17, weight = 600})
 surface.CreateFont("PointerTextInfo", {font = "Trebuchet24", size = 14, weight = 300})
 
-local LIFE_TIME = 45
 local FADE_TIME = 1.5
+local VAL_TIME = 0.1
 local SIZE_H = 256
 local SIZE_W = 128
 local SIZE_2D = 128
@@ -21,6 +21,16 @@ local SIZE_2D_OUT = 32
 -- HANDLE RENDERING
 local pointerData = {}
 local markerData = {}
+local lastValidation = CurTime()
+
+sound.Add({
+	name = "new_pointer",
+	channel = CHAN_STATIC,
+	volume = 1.0,
+	level = 130,
+	sound = "buttons/button9.wav"
+})
+
 
 net.Receive("ttt2_pointer_push", function()
 	pointerData[#pointerData + 1] = {
@@ -32,6 +42,9 @@ net.Receive("ttt2_pointer_push", function()
 		time = CurTime(),
 		texAngle = net.ReadFloat()
 	}
+
+	-- emit sound on new pointer
+	LocalPlayer():EmitSound("new_pointer", 100)
 end)
 
 local function FilteredTextureRotated(x, y, w, h, material, ang, alpha, color)
@@ -80,8 +93,8 @@ local function DrawInfoBox(refX, refY, ply, pointer, color, remaining, opacity)
 	end
 
 	local t_nick = pointer.owner:Nick() .. suffix
-	local t_dist = "Distance: " .. tostring(math.Round(ply:GetPos():Distance(pointer.pos), 0))
-	local t_time = "Time Remaining: " .. tostring(math.floor(remaining, 0))
+	local t_dist = LANG.GetParamTranslation("ttt2_pointer_distance", {distance = math.Round(ply:GetPos():Distance(pointer.pos), 0)})
+	local t_time = LANG.GetParamTranslation("ttt2_pointer_time", {time = math.floor(remaining, 0)})
 
 	local width_nick, height_nick = draw.GetTextSize(t_nick, "PointerTextNick")
 	local width_dist, heigh_dist = draw.GetTextSize(t_dist, "PointerTextInfo")
@@ -140,11 +153,22 @@ end
 hook.Add("Think", "ttt2_pointer_check_validity", function()
 	if #pointerData == 0 then return end
 
+	if CurTime() - lastValidation < VAL_TIME then return end
+
+	lastValidation = CurTime()
+
+	local client = LocalPlayer()
+
 	for i = #pointerData, 1, -1 do
-		if CurTime() - pointerData[i].time < LIFE_TIME then continue end
+		if CurTime() - pointerData[i].time < GetGlobalInt("ttt_pointer_render_time", 8) then continue end
 
 		table.remove(pointerData, i)
 	end
+
+	-- sort table so that far away pointers are rendered first
+	table.sort(pointerData, function(a, b)
+		return client:GetPos():Distance(a.pos) > client:GetPos():Distance(b.pos)
+	end)
 end)
 
 hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", function()
@@ -175,18 +199,26 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 			mask = MASK_SOLID
 		})
 
+		-- the scrpos has to be calculatet inside a non modified cam3D space
+		-- to yield correct results
+		local scrpos
+		cam.Start3D()
+			scrpos = pointerPos:ToScreen()
+		cam.End3D()
+
 		-- trace hit world or pointer is outside of the visible area
 		-- therefore we need to draw a marker on screen in another
 		-- render context
-		if tr.HitWorld or IsOffScreen(pointerPos:ToScreen()) then
+		if tr.HitWorld or IsOffScreen(scrpos) then
 			markerData[#markerData + 1] = {
 				mode = pointer.mode,
 				pos = pointerPos,
+				scrpos = scrpos,
 				time = pointer.time
 			}
 		end
 
-		local remaining = LIFE_TIME - (CurTime() - pointer.time)
+		local remaining = GetGlobalInt("ttt_pointer_render_time", 8) - (CurTime() - pointer.time)
 		local opacity = (remaining > FADE_TIME) and 1 or math.max(remaining / FADE_TIME, 0)
 
 		if IsValid(pointer.ent) then
@@ -195,7 +227,7 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 		else
 			-- DRAW CIRCLE ON GROUND IF IT IS NOT ENTITY
 			cam.Start3D2D(
-				pointerPos,
+				pointerPos + pointer.normal * 2,
 				pointer.normal:Angle() + Angle(90, 0, 0),
 				0.3
 			)
@@ -239,33 +271,73 @@ hook.Add("PostDrawHUD", "ttt2_pointer_draw_2d_marker", function()
 
 		local color = GetColor(marker.mode)
 
-		local scrpos = marker.pos:ToScreen()
-		local isOffScreen = IsOffScreen(scrpos)
+		local isOffScreen = IsOffScreen(marker.scrpos)
 		local sz = 0.5 * (isOffScreen and SIZE_2D_OUT or SIZE_2D)
 
-		scrpos.x = math.Clamp(scrpos.x, sz, ScrW() - sz)
-		scrpos.y = math.Clamp(scrpos.y, sz, ScrH() - sz)
+		marker.scrpos.x = math.Clamp(marker.scrpos.x, sz, ScrW() - sz)
+		marker.scrpos.y = math.Clamp(marker.scrpos.y, sz, ScrH() - sz)
 
-		local remaining = LIFE_TIME - (CurTime() - marker.time)
+		local remaining = GetGlobalInt("ttt_pointer_render_time", 8) - (CurTime() - marker.time)
 		local opacity = (remaining > FADE_TIME) and 1 or math.max(remaining / FADE_TIME, 0)
 
 		if isOffScreen then
-			draw.FilteredTexture(scrpos.x - 0.5 * SIZE_2D_OUT, scrpos.y - 0.5 * SIZE_2D_OUT, SIZE_2D_OUT, SIZE_2D_OUT, pointer2dOutsideMat, 180 * opacity, color)
-			draw.FilteredTexture(scrpos.x - 0.5 * SIZE_2D_OUT, scrpos.y - 0.5 * SIZE_2D_OUT, SIZE_2D_OUT, SIZE_2D_OUT, pointer2dOutsideOverlayMat, 140 * opacity, COLOR_WHITE)
+			draw.FilteredTexture(
+				marker.scrpos.x - 0.5 * SIZE_2D_OUT,
+				marker.scrpos.y - 0.5 * SIZE_2D_OUT,
+				SIZE_2D_OUT,
+				SIZE_2D_OUT,
+				pointer2dOutsideMat,
+				180 * opacity,
+				color
+			)
+			draw.FilteredTexture(
+				marker.scrpos.x - 0.5 * SIZE_2D_OUT,
+				marker.scrpos.y - 0.5 * SIZE_2D_OUT,
+				SIZE_2D_OUT,
+				SIZE_2D_OUT,
+				pointer2dOutsideOverlayMat,
+				140 * opacity,
+				COLOR_WHITE
+			)
 		else
-			draw.FilteredTexture(scrpos.x - 0.5 * SIZE_2D, scrpos.y - 0.5 * SIZE_2D, SIZE_2D, SIZE_2D, pointer2dMat, 180 * opacity, color)
-			draw.FilteredTexture(scrpos.x - 0.5 * SIZE_2D, scrpos.y - 0.5 * SIZE_2D, SIZE_2D, SIZE_2D, pointer2dOverlayMat, 140 * opacity, COLOR_WHITE)
+			draw.FilteredTexture(
+				marker.scrpos.x - 0.5 * SIZE_2D,
+				marker.scrpos.y - 0.5 * SIZE_2D,
+				SIZE_2D,
+				SIZE_2D,
+				pointer2dMat,
+				180 * opacity, color
+			)
+			draw.FilteredTexture(
+				marker.scrpos.x - 0.5 * SIZE_2D,
+				marker.scrpos.y - 0.5 * SIZE_2D,
+				SIZE_2D,
+				SIZE_2D,
+				pointer2dOverlayMat,
+				140 * opacity,
+				COLOR_WHITE
+			)
 
-			draw.ShadowedText(math.Round(client:GetPos():Distance(marker.pos), 0), "Pointer2DText", scrpos.x, scrpos.y, Color(color.r, color.g, color.b, 180 * opacity), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			draw.ShadowedText(
+				math.Round(client:GetPos():Distance(marker.pos), 0),
+				"Pointer2DText",
+				marker.scrpos.x,
+				marker.scrpos.y,
+				Color(color.r, color.g, color.b, 180 * opacity),
+				TEXT_ALIGN_CENTER,
+				TEXT_ALIGN_CENTER
+			)
 		end
 	end
 
 	-- reset marker data array
-	markerData = {}
+	table.Empty(markerData)
 end)
 
 -- CLEAR TEAM MARKER WHEN THE TEAM IS CHANGED
 hook.Add("TTT2UpdateTeam", "ttt2_pointer_team_change", function(ply, old, new)
+	if ply ~= LocalPlayer() then return end
+
 	for i = #pointerData, 1, -1 do
 		if pointerData[i].mode ~= PMODE_TEAM then continue end
 
