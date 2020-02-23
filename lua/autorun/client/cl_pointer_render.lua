@@ -2,10 +2,21 @@ local pointerMat = Material("vgui/ttt/in_world_pointer.png")
 local pointerOverlayMat = Material("vgui/ttt/in_world_pointer_overlay.png")
 local pointerGroundMat = Material("vgui/ttt/in_world_pointer_ground.png")
 local pointerGroundOverlayMat = Material("vgui/ttt/in_world_pointer_ground_overlay.png")
+local pointer2dMat = Material("vgui/ttt/2d_pointer.png")
+local pointer2dOverlayMat = Material("vgui/ttt/2d_pointer_overlay.png")
+local pointer2dOutsideMat = Material("vgui/ttt/2d_pointer_outside.png")
+local pointer2dOutsideOverlayMat = Material("vgui/ttt/2d_pointer_outside_overlay.png")
 
-local LIFE_TIME = 30
+surface.CreateFont("Pointer2DText", {font = "Trebuchet24", size = 24, weight = 900})
+surface.CreateFont("PointerTextNick", {font = "Trebuchet24", size = 17, weight = 600})
+surface.CreateFont("PointerTextInfo", {font = "Trebuchet24", size = 14, weight = 300})
+
+local LIFE_TIME = 45
+local FADE_TIME = 1.5
 local SIZE_H = 256
 local SIZE_W = 128
+local SIZE_2D = 128
+local SIZE_2D_OUT = 32
 
 -- HANDLE RENDERING
 local pointerData = {}
@@ -17,6 +28,7 @@ net.Receive("ttt2_pointer_push", function()
 		pos = net.ReadVector(),
 		normal = net.ReadVector(),
 		ent = net.ReadEntity(),
+		owner = net.ReadEntity(),
 		time = CurTime(),
 		texAngle = net.ReadFloat()
 	}
@@ -44,6 +56,64 @@ local function FilteredTextureRotated(x, y, w, h, material, ang, alpha, color)
 	render.PopFilterMin()
 end
 
+local function DrawInfoBox(refX, refY, ply, pointer, color, remaining, opacity)
+	local t_nick = pointer.owner:Nick() .. (pointer.isGlobal and " [G]" or " [T]")
+	local t_dist = "Distance: " .. tostring(math.Round(ply:GetPos():Distance(pointer.pos), 0))
+	local t_time = "Time Remaining: " .. tostring(math.floor(remaining, 0))
+
+	local width_nick, height_nick = draw.GetTextSize(t_nick, "PointerTextNick")
+	local width_dist, heigh_dist = draw.GetTextSize(t_dist, "PointerTextInfo")
+	local width_time, heigh_time = draw.GetTextSize(t_time, "PointerTextInfo")
+
+	width = math.max(width_nick, width_dist, width_time) + 20
+	height = height_nick + heigh_dist + heigh_time + 20
+
+	local boxColor = Color(color.r, color.g, color.b, 160 * opacity)
+	local textColor = Color(255, 255, 255, 255 * opacity)
+
+	local posX = refX
+	local posY = refY
+
+	draw.RoundedBox(8, posX, posY, width, height, boxColor)
+
+	posX = posX + 10
+	posY = posY + 5
+
+	draw.ShadowedText(
+		t_nick,
+		"PointerTextNick",
+		posX,
+		posY,
+		textColor,
+		TEXT_ALIGN_LEFT,
+		TEXT_ALIGN_TOP
+	)
+
+	posY = posY + height_nick + 5
+
+	draw.ShadowedText(
+		t_dist,
+		"PointerTextInfo",
+		posX,
+		posY,
+		textColor,
+		TEXT_ALIGN_LEFT,
+		TEXT_ALIGN_TOP
+	)
+
+	posY = posY + heigh_dist + 5
+
+	draw.ShadowedText(
+		t_time,
+		"PointerTextInfo",
+		posX,
+		posY,
+		textColor,
+		TEXT_ALIGN_LEFT,
+		TEXT_ALIGN_TOP
+	)
+end
+
 -- check if pointer is still valid
 hook.Add("Think", "ttt2_pointer_check_validity", function()
 	if #pointerData == 0 then return end
@@ -63,20 +133,10 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 	for i = 1, #pointerData do
 		local pointer = pointerData[i]
 
-		local color = INNOCENT.color
-
+		local color = TEAMS[TEAM_INNOCENT].color
 		if not pointer.isGlobal then
 			color = TEAMS[client:GetTeam()].color
 		end
-
-		--local scrpos = pointerData[i].pos:ToScreen()
-
-		--PrintTable(scrpos)
-
-		--if IsOffScreen(scrpos) then
-		--	print("offscreen")
-		--	continue
-		--end
 
 		-- SPECIAL HANDLING IF AN ENTITY IS FOCUSED
 		local pointerPos
@@ -96,15 +156,19 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 			mask = MASK_SOLID
 		})
 
-		-- trace hit world and the pointer might be invisible
+		-- trace hit world or pointer is outside of the visible area
 		-- therefore we need to draw a marker on screen in another
 		-- render context
-		if tr.HitWorld then
+		if tr.HitWorld or IsOffScreen(pointerPos:ToScreen()) then
 			markerData[#markerData + 1] = {
 				isGlobal = pointer.isGlobal,
-				pos = pointerPos
+				pos = pointerPos,
+				time = pointer.time
 			}
 		end
+
+		local remaining = LIFE_TIME - (CurTime() - pointer.time)
+		local opacity = (remaining > FADE_TIME) and 1 or math.max(remaining / FADE_TIME, 0)
 
 		if IsValid(pointer.ent) then
 			-- DRAW OUTLINE AROUND ENTITY IF IT IS AN ENTITY
@@ -117,8 +181,8 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 				0.3
 			)
 
-				draw.FilteredTexture(-0.5 * SIZE_W, -0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundMat, 180, color)
-				draw.FilteredTexture(-0.5 * SIZE_W, -0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundOverlayMat, 160, COLOR_WHITE)
+				draw.FilteredTexture(-0.5 * SIZE_W, -0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundMat, 180 * opacity, color)
+				draw.FilteredTexture(-0.5 * SIZE_W, -0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundOverlayMat, 160 * opacity, COLOR_WHITE)
 
 			cam.End3D2D()
 		end
@@ -131,11 +195,15 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 		)
 
 			if pointer.texAngle == 180 then
-				FilteredTextureRotated(0, -0.365 * SIZE_H, SIZE_W, SIZE_H, pointerMat, 180, 255, color)
-				FilteredTextureRotated(0, -0.365 * SIZE_H, SIZE_W, SIZE_H, pointerOverlayMat, 180, 150, COLOR_WHITE)
+				FilteredTextureRotated(0, -0.365 * SIZE_H, SIZE_W, SIZE_H, pointerMat, 180, 255 * opacity, color)
+				FilteredTextureRotated(0, -0.365 * SIZE_H, SIZE_W, SIZE_H, pointerOverlayMat, 180, 150 * opacity, COLOR_WHITE)
+
+				DrawInfoBox(0.3 * SIZE_W, 0.45 * SIZE_H, client, pointer, color, remaining, opacity)
 			else
-				draw.FilteredTexture(-0.5 * SIZE_W, -0.865 * SIZE_H, SIZE_W, SIZE_H, pointerMat, 255, color)
-				draw.FilteredTexture(-0.5 * SIZE_W, -0.865 * SIZE_H, SIZE_W, SIZE_H, pointerOverlayMat, 150, COLOR_WHITE)
+				draw.FilteredTexture(-0.5 * SIZE_W, -0.865 * SIZE_H, SIZE_W, SIZE_H, pointerMat, 255 * opacity, color)
+				draw.FilteredTexture(-0.5 * SIZE_W, -0.865 * SIZE_H, SIZE_W, SIZE_H, pointerOverlayMat, 150 * opacity, COLOR_WHITE)
+
+				DrawInfoBox(0.3 * SIZE_W, -0.7 * SIZE_H, client, pointer, color, remaining, opacity)
 			end
 
 		cam.End3D2D()
@@ -150,14 +218,30 @@ hook.Add("PostDrawHUD", "ttt2_pointer_draw_2d_marker", function()
 	for i = 1, #markerData do
 		local marker = markerData[i]
 
-		local scrpos = marker.pos:ToScreen()
+		local color = TEAMS[TEAM_INNOCENT].color
+		if not marker.isGlobal then
+			color = TEAMS[client:GetTeam()].color
+		end
 
-		local sz = IsOffScreen(scrpos) and (SIZE_W * 0.5) or SIZE_W
+		local scrpos = marker.pos:ToScreen()
+		local isOffScreen = IsOffScreen(scrpos)
+		local sz = 0.5 * (isOffScreen and SIZE_2D_OUT or SIZE_2D)
 
 		scrpos.x = math.Clamp(scrpos.x, sz, ScrW() - sz)
 		scrpos.y = math.Clamp(scrpos.y, sz, ScrH() - sz)
 
-		draw.FilteredTexture(scrpos.x - 0.5 * SIZE_W, scrpos.y - 0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundMat, 180, color)
+		local remaining = LIFE_TIME - (CurTime() - marker.time)
+		local opacity = (remaining > FADE_TIME) and 1 or math.max(remaining / FADE_TIME, 0)
+
+		if isOffScreen then
+			draw.FilteredTexture(scrpos.x - 0.5 * SIZE_2D_OUT, scrpos.y - 0.5 * SIZE_2D_OUT, SIZE_2D_OUT, SIZE_2D_OUT, pointer2dOutsideMat, 180 * opacity, color)
+			draw.FilteredTexture(scrpos.x - 0.5 * SIZE_2D_OUT, scrpos.y - 0.5 * SIZE_2D_OUT, SIZE_2D_OUT, SIZE_2D_OUT, pointer2dOutsideOverlayMat, 140 * opacity, COLOR_WHITE)
+		else
+			draw.FilteredTexture(scrpos.x - 0.5 * SIZE_2D, scrpos.y - 0.5 * SIZE_2D, SIZE_2D, SIZE_2D, pointer2dMat, 180 * opacity, color)
+			draw.FilteredTexture(scrpos.x - 0.5 * SIZE_2D, scrpos.y - 0.5 * SIZE_2D, SIZE_2D, SIZE_2D, pointer2dOverlayMat, 140 * opacity, COLOR_WHITE)
+
+			draw.ShadowedText(math.Round(client:GetPos():Distance(marker.pos), 0), "Pointer2DText", scrpos.x, scrpos.y, Color(color.r, color.g, color.b, 180 * opacity), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
 	end
 
 	-- reset marker data array
