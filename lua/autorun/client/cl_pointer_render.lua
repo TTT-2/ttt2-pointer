@@ -63,6 +63,12 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 	for i = 1, #pointerData do
 		local pointer = pointerData[i]
 
+		local color = INNOCENT.color
+
+		if not pointer.isGlobal then
+			color = TEAMS[client:GetTeam()].color
+		end
+
 		--local scrpos = pointerData[i].pos:ToScreen()
 
 		--PrintTable(scrpos)
@@ -102,7 +108,7 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 
 		if IsValid(pointer.ent) then
 			-- DRAW OUTLINE AROUND ENTITY IF IT IS AN ENTITY
-			outline.Add(pointer.ent, client:GetRoleColor(), OUTLINE_MODE_VISIBLE)
+			outline.Add(pointer.ent, color, OUTLINE_MODE_VISIBLE)
 		else
 			-- DRAW CIRCLE ON GROUND IF IT IS NOT ENTITY
 			cam.Start3D2D(
@@ -111,7 +117,7 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 				0.3
 			)
 
-				draw.FilteredTexture(-0.5 * SIZE_W, -0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundMat, 180, client:GetRoleColor())
+				draw.FilteredTexture(-0.5 * SIZE_W, -0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundMat, 180, color)
 				draw.FilteredTexture(-0.5 * SIZE_W, -0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundOverlayMat, 160, COLOR_WHITE)
 
 			cam.End3D2D()
@@ -125,10 +131,10 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 		)
 
 			if pointer.texAngle == 180 then
-				FilteredTextureRotated(0, -0.365 * SIZE_H, SIZE_W, SIZE_H, pointerMat, 180, 255, client:GetRoleColor())
+				FilteredTextureRotated(0, -0.365 * SIZE_H, SIZE_W, SIZE_H, pointerMat, 180, 255, color)
 				FilteredTextureRotated(0, -0.365 * SIZE_H, SIZE_W, SIZE_H, pointerOverlayMat, 180, 150, COLOR_WHITE)
 			else
-				draw.FilteredTexture(-0.5 * SIZE_W, -0.865 * SIZE_H, SIZE_W, SIZE_H, pointerMat, 255, client:GetRoleColor())
+				draw.FilteredTexture(-0.5 * SIZE_W, -0.865 * SIZE_H, SIZE_W, SIZE_H, pointerMat, 255, color)
 				draw.FilteredTexture(-0.5 * SIZE_W, -0.865 * SIZE_H, SIZE_W, SIZE_H, pointerOverlayMat, 150, COLOR_WHITE)
 			end
 
@@ -151,7 +157,7 @@ hook.Add("PostDrawHUD", "ttt2_pointer_draw_2d_marker", function()
 		scrpos.x = math.Clamp(scrpos.x, sz, ScrW() - sz)
 		scrpos.y = math.Clamp(scrpos.y, sz, ScrH() - sz)
 
-		draw.FilteredTexture(scrpos.x - 0.5 * SIZE_W, scrpos.y - 0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundMat, 180, client:GetRoleColor())
+		draw.FilteredTexture(scrpos.x - 0.5 * SIZE_W, scrpos.y - 0.5 * SIZE_W, SIZE_W, SIZE_W, pointerGroundMat, 180, color)
 	end
 
 	-- reset marker data array
