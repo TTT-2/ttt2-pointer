@@ -4,6 +4,7 @@ util.AddNetworkString("ttt2_pointer_push")
 net.Receive("ttt2_pointer_request", function(len, ply)
 	local isGlobal = net.ReadBool()
 	local trPos = net.ReadVector()
+	local trEnt = net.ReadEntity()
 
 	-- special handling for post and prep time
 	if GetRoundState() ~= ROUND_ACTIVE then
@@ -34,5 +35,6 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 	net.Start("ttt2_pointer_push")
 	net.WriteBool(isGlobal)
 	net.WriteVector(trPos)
+	net.WriteEntity(trEnt)
 	net.Send(playersToNotify)
 end)
