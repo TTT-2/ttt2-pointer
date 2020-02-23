@@ -1,31 +1,27 @@
 util.AddNetworkString("ttt2_pointer_request")
 util.AddNetworkString("ttt2_pointer_push")
 
-local MODE_GLOBAL = 0
-local MODE_TEAM = 1
-local MODE_SPEC = 2
-
 net.Receive("ttt2_pointer_request", function(len, ply)
 	local isGlobal = net.ReadBool()
 	local trPos = net.ReadVector()
 	local trNormal = net.ReadVector()
 	local trEnt = net.ReadEntity()
 	local texAngle = 0
-	local mode = isGlobal and MODE_GLOBAL or MODE_TEAM
+	local mode = isGlobal and PMODE_GLOBAL or PMODE_TEAM
 
 	-- special handling for post and prep time
 	if GetRoundState() ~= ROUND_ACTIVE then
-		mode = MODE_GLOBAL
+		mode = PMODE_GLOBAL
 	end
 
 	-- special handling for innocent team
 	if ply:GetTeam() == TEAM_INNOCENT then
-		mode = MODE_GLOBAL
+		mode = PMODE_GLOBAL
 	end
 
 	-- special handling for spectators
 	if ply:IsSpec() then
-		mode = MODE_SPEC
+		mode = PMODE_SPEC
 	end
 
 	-- if the pointer is on a surface, check if it should be
@@ -44,7 +40,7 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 
 	local playersToNotify = {}
 
-	if mode == MODE_SPEC then
+	if mode == PMODE_SPEC then
 		local players = player.GetAll()
 
 		for i = 1, #players do
@@ -55,7 +51,7 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 
 			playersToNotify[#playersToNotify + 1] = p
 		end
-	elseif mode == MODE_GLOBAL then
+	elseif mode == PMODE_GLOBAL then
 		playersToNotify = player.GetAll()
 	else
 		local players = player.GetAll()

@@ -11,10 +11,6 @@ surface.CreateFont("Pointer2DText", {font = "Trebuchet24", size = 24, weight = 9
 surface.CreateFont("PointerTextNick", {font = "Trebuchet24", size = 17, weight = 600})
 surface.CreateFont("PointerTextInfo", {font = "Trebuchet24", size = 14, weight = 300})
 
-local MODE_GLOBAL = 0
-local MODE_TEAM = 1
-local MODE_SPEC = 2
-
 local LIFE_TIME = 45
 local FADE_TIME = 1.5
 local SIZE_H = 256
@@ -62,9 +58,9 @@ end
 
 local function GetColor(mode)
 	local color
-	if mode == MODE_GLOBAL then
+	if mode == PMODE_GLOBAL then
 		color = TEAMS[TEAM_INNOCENT].color
-	elseif mode == MODE_TEAM then
+	elseif mode == PMODE_TEAM then
 		color = TEAMS[LocalPlayer():GetTeam()].color
 	else
 		color = COLOR_YELLOW
@@ -75,9 +71,9 @@ end
 
 local function DrawInfoBox(refX, refY, ply, pointer, color, remaining, opacity)
 	local suffix
-	if pointer.mode == MODE_GLOBAL then
+	if pointer.mode == PMODE_GLOBAL then
 		suffix = " [G]"
-	elseif pointer.mode == MODE_TEAM then
+	elseif pointer.mode == PMODE_TEAM then
 		suffix = " [T]"
 	else
 		suffix = " [S]"
@@ -195,7 +191,7 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 
 		if IsValid(pointer.ent) then
 			-- DRAW OUTLINE AROUND ENTITY IF IT IS AN ENTITY
-			outline.Add(pointer.ent, color, OUTLINE_MODE_VISIBLE)
+			outline.Add(pointer.ent, color, OUTLINE_PMODE_VISIBLE)
 		else
 			-- DRAW CIRCLE ON GROUND IF IT IS NOT ENTITY
 			cam.Start3D2D(
@@ -271,7 +267,7 @@ end)
 -- CLEAR TEAM MARKER WHEN THE TEAM IS CHANGED
 hook.Add("TTT2UpdateTeam", "ttt2_pointer_team_change", function(ply, old, new)
 	for i = #pointerData, 1, -1 do
-		if pointerData[i].mode ~= MODE_TEAM then continue end
+		if pointerData[i].mode ~= PMODE_TEAM then continue end
 
 		table.remove(pointerData, i)
 	end
@@ -280,7 +276,7 @@ end)
 -- CLEAR SPEC MARKER WHEN THE IS REVIVED
 hook.Add("PlayerSpawn", "ttt2_pointer_respawn", function(ply, old, new)
 	for i = #pointerData, 1, -1 do
-		if pointerData[i].mode ~= MODE_SPEC then continue end
+		if pointerData[i].mode ~= PMODE_SPEC then continue end
 
 		table.remove(pointerData, i)
 	end
