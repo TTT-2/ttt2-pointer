@@ -25,6 +25,15 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 		mode = PMODE_SPEC
 	end
 
+	-- make sure a certain amount of time since the last pointer has passed
+	local timeout = GetConVar("ttt_pointer_timeout"):GetInt()
+
+	if ply.last_pointer_time and CurTime() - ply.last_pointer_time < timeout then
+		LANG.Msg(ply, "ttt2_pointer_timeout", {time = math.ceil(timeout - CurTime() + ply.last_pointer_time)}, MSG_MSTACK_WARN)
+
+		return
+	end
+
 	-- if the pointer is on a surface, check if it should be
 	-- upside or downside
 	if not IsValid(trEnt) then
@@ -81,6 +90,10 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 		print("[TTT2 Pointer] " .. ply:Nick() .. " issued a new pointer at: [x=" .. tostring(trPos.x) .. ", y=" .. tostring(trPos.y) .. ", z=" .. tostring(trPos.z) .. "], mode: " .. (isGlobal and "global" or "team"))
 	end
 
+	-- SET LAST POINTER
+	ply.last_pointer_time = CurTime()
+
+	-- WRITE DATA TO CLIENTS
 	net.Start("ttt2_pointer_push")
 	net.WriteUInt(mode, 2)
 	net.WriteVector(trPos)

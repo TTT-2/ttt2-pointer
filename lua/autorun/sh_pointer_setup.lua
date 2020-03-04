@@ -15,12 +15,16 @@ end
 
 local cv = {}
 cv.render_time = CreateConVar("ttt_pointer_render_time", 8, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
+cv.timeout = CreateConVar("ttt_pointer_timeout", 2, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
+cv.amount = CreateConVar("ttt_pointer_amount_per_type", 3, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
 cv.enb_global = CreateConVar("ttt_pointer_enable_global", 1, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
 cv.enb_team = CreateConVar("ttt_pointer_enable_team", 1, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
 cv.enb_spec = CreateConVar("ttt_pointer_enable_spec", 1, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
 
 hook.Add("TTTUlxInitCustomCVar", "ttt2_pointer_replicate_convars", function(name)
 	ULib.replicatedWritableCvar(cv.render_time:GetName(), "rep_" .. cv.render_time:GetName(), cv.render_time:GetInt(), true, false, name)
+	ULib.replicatedWritableCvar(cv.timeout:GetName(), "rep_" .. cv.timeout:GetName(), cv.timeout:GetInt(), true, false, name)
+	ULib.replicatedWritableCvar(cv.amount:GetName(), "rep_" .. cv.amount:GetName(), cv.amount:GetInt(), true, false, name)
 	ULib.replicatedWritableCvar(cv.enb_global:GetName(), "rep_" .. cv.enb_global:GetName(), cv.enb_global:GetBool(), true, false, name)
 	ULib.replicatedWritableCvar(cv.enb_team:GetName(), "rep_" .. cv.enb_team:GetName(), cv.enb_team:GetBool(), true, false, name)
 	ULib.replicatedWritableCvar(cv.enb_spec:GetName(), "rep_" .. cv.enb_spec:GetName(), cv.enb_spec:GetBool(), true, false, name)
@@ -31,11 +35,15 @@ if SERVER then
 	-- I don't like it any more than you do, dear reader. Copycat!
 	hook.Add("TTT2SyncGlobals", "ttt2_pointer_sync_convars", function()
 		SetGlobalInt(cv.render_time:GetName(), cv.render_time:GetInt())
+		SetGlobalInt(cv.amount:GetName(), cv.amount:GetInt())
 	end)
 
 	-- sync convars on change
 	cvars.AddChangeCallback(cv.render_time:GetName(), function(cvar, old, new)
 		SetGlobalInt(cv.render_time:GetName(), tonumber(new))
+	end)
+	cvars.AddChangeCallback(cv.amount:GetName(), function(cvar, old, new)
+		SetGlobalInt(cv.amount:GetName(), tonumber(new))
 	end)
 end
 
@@ -46,13 +54,13 @@ if CLIENT then
 
 		-- Basic Settings
 		local tttrsclp = vgui.Create("DCollapsibleCategory", tttrspnl)
-		tttrsclp:SetSize(390, 85)
+		tttrsclp:SetSize(390, 135)
 		tttrsclp:SetExpanded(1)
 		tttrsclp:SetLabel("Basic Settings")
 
 		local tttrslst = vgui.Create("DPanelList", tttrsclp)
 		tttrslst:SetPos(5, 25)
-		tttrslst:SetSize(390, 85)
+		tttrslst:SetSize(390, 135)
 		tttrslst:SetSpacing(5)
 
 		tttrslst:AddItem(xlib.makeslider{
@@ -60,6 +68,24 @@ if CLIENT then
 			repconvar = "rep_" .. cv.render_time:GetName(),
 			min = 0,
 			max = 100,
+			decimal = 0,
+			parent = tttrslst
+		})
+
+		tttrslst:AddItem(xlib.makeslider{
+			label = cv.timeout:GetName() .. " (def. 2)",
+			repconvar = "rep_" .. cv.timeout:GetName(),
+			min = 0,
+			max = 20,
+			decimal = 0,
+			parent = tttrslst
+		})
+
+		tttrslst:AddItem(xlib.makeslider{
+			label = cv.amount:GetName() .. " (def. 3)",
+			repconvar = "rep_" .. cv.amount:GetName(),
+			min = 1,
+			max = 20,
 			decimal = 0,
 			parent = tttrslst
 		})

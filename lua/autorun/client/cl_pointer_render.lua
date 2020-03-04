@@ -31,9 +31,24 @@ sound.Add({
 	sound = "buttons/button9.wav"
 })
 
+local function DistanceSort()
+	local client = LocalPlayer()
+
+	table.sort(pointerData, function(a, b)
+		return client:GetPos():Distance(a.pos) > client:GetPos():Distance(b.pos)
+	end)
+end
+
+local function AgeSort()
+	table.sort(pointerData, function(a, b)
+		return a.time > b.time
+	end)
+end
 
 net.Receive("ttt2_pointer_push", function()
-	pointerData[#pointerData + 1] = {
+	local client = LocalPlayer()
+
+	local newPointer = {
 		mode = net.ReadUInt(2),
 		pos = net.ReadVector(),
 		normal = net.ReadVector(),
@@ -49,8 +64,46 @@ net.Receive("ttt2_pointer_push", function()
 		)
 	}
 
+	pointerData[#pointerData + 1] = newPointer
+
 	-- emit sound on new pointer
-	LocalPlayer():EmitSound("new_pointer", 100)
+	client:EmitSound("new_pointer", 100)
+
+	-- make sure only a certain amount of pointers per player is allowed
+
+	-- 1. count pointers per player per type
+	local amount = 0
+
+	for i = 1, #pointerData do
+		local pointer = pointerData[i]
+
+		if pointer.owner ~= newPointer.owner then continue end
+
+		if pointer.mode ~= newPointer.mode then continue end
+
+		amount = amount + 1
+	end
+
+	if amount <= GetGlobalBool("ttt_pointer_amount_per_type", 3) then return end
+
+	-- 2. sort by age
+	AgeSort()
+
+	-- 3. remove oldest
+	for i = #pointerData, 1, -1 do
+		local pointer = pointerData[i]
+
+		if pointer.owner ~= newPointer.owner then continue end
+
+		if pointer.mode ~= newPointer.mode then continue end
+
+		table.remove(pointerData, i)
+
+		break
+	end
+
+	-- 4. resort by distance
+	DistanceSort()
 end)
 
 local function FilteredTextureRotated(x, y, w, h, material, ang, alpha, color)
@@ -150,8 +203,6 @@ hook.Add("Think", "ttt2_pointer_check_validity", function()
 
 	lastValidation = CurTime()
 
-	local client = LocalPlayer()
-
 	for i = #pointerData, 1, -1 do
 		if CurTime() - pointerData[i].time < GetGlobalInt("ttt_pointer_render_time", 8) then continue end
 
@@ -159,9 +210,7 @@ hook.Add("Think", "ttt2_pointer_check_validity", function()
 	end
 
 	-- sort table so that far away pointers are rendered first
-	table.sort(pointerData, function(a, b)
-		return client:GetPos():Distance(a.pos) > client:GetPos():Distance(b.pos)
-	end)
+	DistanceSort()
 end)
 
 hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", function()
