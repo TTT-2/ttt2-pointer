@@ -8,6 +8,7 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 	local trEnt = net.ReadEntity()
 	local texAngle = 0
 	local mode = isGlobal and PMODE_GLOBAL or PMODE_TEAM
+	local color = COLOR_WHITE
 
 	-- special handling for post and prep time
 	if GetRoundState() ~= ROUND_ACTIVE then
@@ -51,8 +52,12 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 
 			playersToNotify[#playersToNotify + 1] = p
 		end
+
+		color = COLOR_YELLOW
 	elseif mode == PMODE_GLOBAL then
 		playersToNotify = player.GetAll()
+
+		color = TEAMS[TEAM_INNOCENT].color
 	else
 		local players = player.GetAll()
 
@@ -64,6 +69,8 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 
 			playersToNotify[#playersToNotify + 1] = p
 		end
+
+		color = TEAMS[ply:GetTeam()].color
 	end
 
 	-- PRINT LOGGING INFORMATION
@@ -81,6 +88,10 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 	net.WriteEntity(trEnt)
 	net.WriteEntity(ply)
 	net.WriteFloat(texAngle)
+	net.WriteUInt(color.r, 8)
+	net.WriteUInt(color.g, 8)
+	net.WriteUInt(color.b, 8)
+	net.WriteUInt(color.a, 8)
 	net.Send(playersToNotify)
 
 	LANG.Msg(playersToNotify, "ttt2_pointer_new", {playername = ply:Nick()}, MSG_MSTACK_PLAIN)
