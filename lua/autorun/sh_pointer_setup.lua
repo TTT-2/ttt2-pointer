@@ -15,9 +15,15 @@ end
 
 local cv = {}
 cv.render_time = CreateConVar("ttt_pointer_render_time", 8, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
+cv.enb_global = CreateConVar("ttt_pointer_enable_global", 1, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
+cv.enb_team = CreateConVar("ttt_pointer_enable_team", 1, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
+cv.enb_spec = CreateConVar("ttt_pointer_enable_spec", 1, {FCVAR_NOTIFY, FCVAR_ARCHIVE})
 
 hook.Add("TTTUlxInitCustomCVar", "ttt2_pointer_replicate_convars", function(name)
 	ULib.replicatedWritableCvar(cv.render_time:GetName(), "rep_" .. cv.render_time:GetName(), cv.render_time:GetInt(), true, false, name)
+	ULib.replicatedWritableCvar(cv.enb_global:GetName(), "rep_" .. cv.enb_global:GetName(), cv.enb_global:GetBool(), true, false, name)
+	ULib.replicatedWritableCvar(cv.enb_team:GetName(), "rep_" .. cv.enb_team:GetName(), cv.enb_team:GetBool(), true, false, name)
+	ULib.replicatedWritableCvar(cv.enb_spec:GetName(), "rep_" .. cv.enb_spec:GetName(), cv.enb_spec:GetBool(), true, false, name)
 end)
 
 if SERVER then
@@ -40,13 +46,13 @@ if CLIENT then
 
 		-- Basic Settings
 		local tttrsclp = vgui.Create("DCollapsibleCategory", tttrspnl)
-		tttrsclp:SetSize(390, 20)
+		tttrsclp:SetSize(390, 85)
 		tttrsclp:SetExpanded(1)
 		tttrsclp:SetLabel("Basic Settings")
 
 		local tttrslst = vgui.Create("DPanelList", tttrsclp)
 		tttrslst:SetPos(5, 25)
-		tttrslst:SetSize(390, 20)
+		tttrslst:SetSize(390, 85)
 		tttrslst:SetSpacing(5)
 
 		tttrslst:AddItem(xlib.makeslider{
@@ -55,6 +61,24 @@ if CLIENT then
 			min = 0,
 			max = 100,
 			decimal = 0,
+			parent = tttrslst
+		})
+
+		tttrslst:AddItem(xlib.makecheckbox{
+			label = cv.enb_global:GetName() .. " (def. 1)",
+			repconvar = "rep_" .. cv.enb_global:GetName(),
+			parent = tttrslst
+		})
+
+		tttrslst:AddItem(xlib.makecheckbox{
+			label = cv.enb_team:GetName() .. " (def. 1)",
+			repconvar = "rep_" .. cv.enb_team:GetName(),
+			parent = tttrslst
+		})
+
+		tttrslst:AddItem(xlib.makecheckbox{
+			label = cv.enb_spec:GetName() .. " (def. 1)",
+			repconvar = "rep_" .. cv.enb_spec:GetName(),
 			parent = tttrslst
 		})
 

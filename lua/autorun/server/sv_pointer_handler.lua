@@ -41,7 +41,7 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 
 	local playersToNotify = {}
 
-	if mode == PMODE_SPEC then
+	if mode == PMODE_SPEC and GetConVar("ttt_pointer_enable_spec"):GetBool() then
 		local players = player.GetAll()
 
 		for i = 1, #players do
@@ -54,11 +54,11 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 		end
 
 		color = COLOR_YELLOW
-	elseif mode == PMODE_GLOBAL then
+	elseif mode == PMODE_GLOBAL and GetConVar("ttt_pointer_enable_global"):GetBool() then
 		playersToNotify = player.GetAll()
 
 		color = TEAMS[TEAM_INNOCENT].color
-	else
+	elseif mode == PMODE_TEAM and GetConVar("ttt_pointer_enable_team"):GetBool() then
 		local players = player.GetAll()
 
 		for i = 1, #players do
