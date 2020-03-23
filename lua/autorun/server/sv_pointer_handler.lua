@@ -25,6 +25,9 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 		mode = PMODE_SPEC
 	end
 
+	-- add exterman addon support to block pointer usage
+	if hook.Run("TTT2CanUsePointer", ply, mode, trPos, trEnt) == false then return end
+
 	-- make sure a certain amount of time since the last pointer has passed
 	local timeout = GetConVar("ttt_pointer_timeout"):GetInt()
 
@@ -109,3 +112,14 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 
 	LANG.Msg(playersToNotify, "ttt2_pointer_new", {playername = ply:Nick()}, MSG_MSTACK_PLAIN)
 end)
+
+---
+-- Defines if a player can use the pointer
+-- @param Player ply The player that tries to use the pointer
+-- @param number mode The pointer mode
+-- @param Vector trPos The marked position
+-- @param Entity trEnt The marked entity (can be nil)
+-- @return boolean Return false to block usage
+function GM:TTT2CanUsePointer(ply, mode, trPos, trEnt)
+
+end
