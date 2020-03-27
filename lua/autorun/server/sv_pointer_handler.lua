@@ -120,6 +120,6 @@ end)
 -- @param Vector trPos The marked position
 -- @param Entity trEnt The marked entity (can be nil)
 -- @return boolean Return false to block usage
-function GAMEMODE:TTT2CanUsePointer(ply, mode, trPos, trEnt)
+--[[function GM:TTT2CanUsePointer(ply, mode, trPos, trEnt)
 
-end
+end]]
