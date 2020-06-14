@@ -24,6 +24,11 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 	if ply:IsSpec() then
 		mode = PMODE_SPEC
 	end
+	
+	-- if ConVar is disabled, don't create a pointer
+	if not GetConVar("ttt_pointer_enable_global"):GetBool() and mode == PMODE_GLOBAL then return end
+	if not GetConVar("ttt_pointer_enable_team"):GetBool() and mode == PMODE_TEAM then return end
+	if not GetConVar("ttt_pointer_enable_spec"):GetBool() and mode == PMODE_SPEC then return end
 
 	-- add exterman addon support to block pointer usage
 	if hook.Run("TTT2CanUsePointer", ply, mode, trPos, trEnt) == false then return end
