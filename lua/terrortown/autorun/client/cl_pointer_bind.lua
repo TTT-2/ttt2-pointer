@@ -25,18 +25,18 @@ end
 
 hook.Add("Initialize", "ttt2_pointer_register_binds", function()
 	bind.Register(
-		"ttt2_pointer_global",
+		"label_bind_pointer_global",
 		function()
 			StartPointer(true)
 		end,
-		nil, "ttt2_pointer", nil, KEY_K
+		nil, "header_bindings_pointer", nil, KEY_K
 	)
 
 	bind.Register(
-		"ttt2_pointer_team",
+		"label_bind_pointer_team",
 		function()
 			StartPointer(false)
 		end,
-		nil, "ttt2_pointer", nil, KEY_L
+		nil, "header_bindings_pointer", nil, KEY_L
 	)
 end)
