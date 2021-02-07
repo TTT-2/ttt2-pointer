@@ -249,7 +249,7 @@ hook.Add("PostDrawTranslucentRenderables", "ttt2_pointer_draw_inworld_marker", f
 		-- trace hit world or pointer is outside of the visible area
 		-- therefore we need to draw a marker on screen in another
 		-- render context
-		if tr.HitWorld or IsOffScreen(scrpos) then
+		if tr.HitWorld or util.IsOffScreen(scrpos) then
 			markerData[#markerData + 1] = {
 				mode = pointer.mode,
 				pos = pointerPos,
@@ -310,7 +310,7 @@ hook.Add("PostDrawHUD", "ttt2_pointer_draw_2d_marker", function()
 	for i = 1, #markerData do
 		local marker = markerData[i]
 
-		local isOffScreen = IsOffScreen(marker.scrpos)
+		local isOffScreen = util.IsOffScreen(marker.scrpos)
 		local sz = 0.5 * (isOffScreen and SIZE_2D_OUT or SIZE_2D)
 
 		marker.scrpos.x = math.Clamp(marker.scrpos.x, sz, ScrW() - sz)
