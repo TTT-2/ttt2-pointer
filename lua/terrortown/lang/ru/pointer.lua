@@ -1,4 +1,4 @@
-L = LANG.GetLanguageTableReference("Русский")
+L = LANG.GetLanguageTableReference("ru")
 
 L["ttt2_pointer_new"] = "{playername} добавил новый 3D-указатель!"
 L["ttt2_pointer_timeout"] = "Вы должны подождать {time} сек., чтобы добавить новый указатель!"
