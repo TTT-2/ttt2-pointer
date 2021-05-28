@@ -23,6 +23,11 @@ local pointerData = {}
 local markerData = {}
 local lastValidation = CurTime()
 
+local cvPointerGlobalEnabled = CreateConVar("ttt_pointer_global_local_enable", "1", FCVAR_ARCHIVE)
+local cvPointerTeamEnabled = CreateConVar("ttt_pointer_team_local_enable", "1", FCVAR_ARCHIVE)
+local cvPointerSpecEnabled = CreateConVar("ttt_pointer_spec_local_enable", "1", FCVAR_ARCHIVE)
+local cvPointerSoundEnabled = CreateConVar("ttt_pointer_sound_local_enable", "1", FCVAR_ARCHIVE)
+
 sound.Add({
 	name = "new_pointer",
 	channel = CHAN_STATIC,
@@ -64,10 +69,19 @@ net.Receive("ttt2_pointer_push", function()
 		)
 	}
 
+	if newPointer.mode == PMODE_GLOBAL and not cvPointerGlobalEnabled:GetBool()
+		or newPointer.mode == PMODE_TEAM and not cvPointerTeamEnabled:GetBool()
+		or newPointer.mode == PMODE_SPEC and not cvPointerSpecEnabled:GetBool()
+	then return end
+
+	LANG.ProcessMsg("ttt2_pointer_new", {playername = newPointer.owner:Nick()}, MSG_MSTACK_PLAIN)
+
 	pointerData[#pointerData + 1] = newPointer
 
 	-- emit sound on new pointer
-	client:EmitSound("new_pointer", 100)
+	if cvPointerSoundEnabled:GetBool() then
+		client:EmitSound("new_pointer", 100)
+	end
 
 	-- make sure only a certain amount of pointers per player is allowed
 
