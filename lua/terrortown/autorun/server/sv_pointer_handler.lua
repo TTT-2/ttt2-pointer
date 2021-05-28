@@ -15,14 +15,16 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 		mode = PMODE_GLOBAL
 	end
 
-	-- special handling for innocent team
-	if ply:GetTeam() == TEAM_INNOCENT then
-		mode = PMODE_GLOBAL
-	end
-
 	-- special handling for spectators
 	if ply:IsSpec() then
 		mode = PMODE_SPEC
+	end
+
+	local tm = ply:GetTeam()
+
+	-- special handling for innocent team and no team
+	if not tm or tm == TEAM_NONE or TEAMS[tm].alone or tm == TEAM_INNOCENT then
+		mode = PMODE_GLOBAL
 	end
 
 	-- add exterman addon support to block pointer usage
