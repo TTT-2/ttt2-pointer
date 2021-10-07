@@ -27,5 +27,5 @@ L["ttt2_pointer_time"] = "Времени осталось: {time}"
 
 --L["help_addons_pointer_detail"] = [[
 --Global: All pointers that are added by anoyone without a team restriction.
---Team: All pointers that are added by someone from your team. They have to be added as team pointers and this only works for players that aren't in the innocent team or without a --team.
+--Team: All pointers that are added by someone from your team. They have to be added as team pointers and this only works for players that aren't in the innocent team or without a team.
 --Spectator: All pointers that are added by spectators. They are only visible if you are also a spectator.]]
