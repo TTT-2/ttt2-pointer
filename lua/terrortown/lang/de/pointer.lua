@@ -18,5 +18,10 @@ L["label_pointer_spec_enable"] = "Aktiviere das lokale Anzeigen von Zuschauer 3D
 L["help_addons_pointer"] = "Standardmäßig werden alle Pointer auf dem Client angezeigt. Allerdings können die drei Arten unabhängig voneinander deaktiviert werden, wenn du sie nicht im Spiel sehen willst."
 L["help_addons_pointer_detail"] = [[
 Global: Alle Pointer, die von beliebigen Spielern hinzugefügt werden.
-Team: ALle Pointer, die von Teammitgliedern hinzugefügt werden. Sie müssen allerdings als Teampointer hinzugefügt werden. Dies funktioniert nur für Spieler, die ein Team haben und nicht im Team der Unschuldigen sind.
+Team: Alle Pointer, die von Teammitgliedern hinzugefügt werden. Sie müssen allerdings als Teampointer hinzugefügt werden. Dies funktioniert nur für Spieler, die ein Team haben und nicht im Team der Unschuldigen sind.
 Zuschauer: Alle Pointer, die von Zuschauern hinzugefügt werden. Sie sind nur sichtbar, wenn man selber auch Zuschauer ist.]]
+
+L["help_server_addons_pointer"] = "Standardmäßig können alle Pointertypen hinzugefügt werden. Allerdings können die drei Arten unabhängig voneinander deaktiviert werden, wenn du sie nicht auf dem Server nutzen willst."
+L["label_pointer_render_time"] = "Zeit (Sekunden), die ein Pointer sichtbar ist"
+L["label_pointer_timeout"] = "Zeit (Sekunden) Timeout pro Spieler für neuen Pointer"
+L["label_pointer_amount_per_type"] = "Anzahl gleichzeitiger Pointer pro Spieler pro Typ"

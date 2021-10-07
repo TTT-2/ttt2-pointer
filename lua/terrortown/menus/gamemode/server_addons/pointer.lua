@@ -7,7 +7,7 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	local form = vgui.CreateTTT2Form(parent, "header_addons_pointer")
 
 	form:MakeHelp({
-		label = "help_addons_pointer"
+		label = "help_server_addons_pointer"
 	})
 
 	form:MakeCheckBox({
