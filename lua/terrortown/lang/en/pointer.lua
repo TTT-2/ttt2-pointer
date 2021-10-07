@@ -20,3 +20,6 @@ L["help_addons_pointer_detail"] = [[
 Global: All pointers that are added by anoyone without a team restriction.
 Team: All pointers that are added by someone from your team. They have to be added as team pointers and this only works for players that aren't in the innocent team or without a team.
 Spectator: All pointers that are added by spectators. They are only visible if you are also a spectator.]]
+L["label_pointer_render_time"] = "Time in seconds a pointer is rendered in world"
+L["label_pointer_timeout"] = "Timeout in seconds per player for a new pointer"
+L["label_pointer_amount_per_type"] = "Amount of pointers per player per type at once"
