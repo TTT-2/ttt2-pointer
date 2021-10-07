@@ -1,6 +1,6 @@
---- @ignore
-
 CLGAMEMODESUBMENU.base = "base_gamemodesubmenu"
+
+CLGAMEMODESUBMENU.priority = 0
 CLGAMEMODESUBMENU.title = "submenu_addons_pointer_title"
 
 function CLGAMEMODESUBMENU:Populate(parent)

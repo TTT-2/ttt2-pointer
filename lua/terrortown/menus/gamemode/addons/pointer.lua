@@ -7,7 +7,7 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	local form = vgui.CreateTTT2Form(parent, "header_addons_pointer")
 
 	form:MakeCheckBox({
-		label = "label_pointer_sound_enable",
+		label = "label_pointer_local_sound_enable",
 		convar = "ttt_pointer_sound_local_enable"
 	})
 
@@ -16,17 +16,17 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	})
 
 	form:MakeCheckBox({
-		label = "label_pointer_global_enable",
+		label = "label_pointer_local_global_enable",
 		convar = "ttt_pointer_global_local_enable"
 	})
 
 	form:MakeCheckBox({
-		label = "label_pointer_team_enable",
+		label = "label_pointer_local_team_enable",
 		convar = "ttt_pointer_team_local_enable"
 	})
 
 	form:MakeCheckBox({
-		label = "label_pointer_spec_enable",
+		label = "label_pointer_local_spec_enable",
 		convar = "ttt_pointer_spec_local_enable"
 	})
 
