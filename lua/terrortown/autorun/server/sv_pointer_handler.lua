@@ -9,21 +9,18 @@ net.Receive("ttt2_pointer_request", function(len, ply)
 	local texAngle = 0
 	local mode = isGlobal and PMODE_GLOBAL or PMODE_TEAM
 	local color = COLOR_WHITE
+	local tm = ply:GetTeam()
 
 	-- special handling for post and prep time
 	if GetRoundState() ~= ROUND_ACTIVE then
 		mode = PMODE_GLOBAL
 	end
 
-	-- special handling for spectators
 	if ply:IsSpec() then
+		-- special handling for spectators
 		mode = PMODE_SPEC
-	end
-
-	local tm = ply:GetTeam()
-
-	-- special handling for innocent team and no team
-	if not tm or tm == TEAM_NONE or TEAMS[tm].alone or tm == TEAM_INNOCENT then
+	elseif not tm or tm == TEAM_NONE or TEAMS[tm].alone or tm == TEAM_INNOCENT then
+		-- special handling for innocent team and no team
 		mode = PMODE_GLOBAL
 	end
 
