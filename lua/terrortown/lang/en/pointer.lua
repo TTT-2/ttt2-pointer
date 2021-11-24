@@ -1,4 +1,4 @@
-L = LANG.GetLanguageTableReference("en")
+local L = LANG.GetLanguageTableReference("en")
 
 L["ttt2_pointer_new"] = "{playername} added a new 3D pointer!"
 L["ttt2_pointer_timeout"] = "You have to wait {time} second(s) to add a new pointer!"
