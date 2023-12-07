@@ -1,5 +1,8 @@
+local materialPointerGlobal = Material("vgui/ttt/hudhelp/pointer_global")
+local materialPointerTeam = Material("vgui/ttt/hudhelp/pointer_team")
+
 -- HANDLE LOCAL INPUTS
-local function StartPointer(isGlobal)
+local function TogglePointer(isGlobal)
 	local client = LocalPlayer()
 
 	local ignore = {client}
@@ -23,20 +26,44 @@ local function StartPointer(isGlobal)
 	net.SendToServer()
 end
 
-hook.Add("Initialize", "ttt2_pointer_register_binds", function()
+hook.Add("TTT2FinishedLoading", "ttt2_pointer_register_binds", function()
 	bind.Register(
-		"label_bind_pointer_global",
+		"pointer_global",
 		function()
-			StartPointer(true)
+			TogglePointer(true)
 		end,
-		nil, "header_bindings_pointer", nil, KEY_K
+		nil, "header_bindings_pointer", "label_bind_pointer_global", KEY_K
 	)
 
 	bind.Register(
-		"label_bind_pointer_team",
+		"pointer_team",
 		function()
-			StartPointer(false)
+			TogglePointer(false)
 		end,
-		nil, "header_bindings_pointer", nil, KEY_L
+		nil, "header_bindings_pointer", "label_bind_pointer_team", KEY_L
 	)
+
+	keyhelp.RegisterKeyHelper("pointer_global", materialPointerGlobal, KEYHELP_EXTRA, "label_keyhelper_pointer_global", function(client)
+		if client:IsSpec() then return end
+
+		if not GetConVar("ttt_pointer_enable_global"):GetBool() then return end
+
+		return true
+	end)
+
+	keyhelp.RegisterKeyHelper("pointer_team", materialPointerTeam, KEYHELP_EXTRA, "label_keyhelper_pointer_spec", function(client)
+		if client:IsSpec() and not GetConVar("ttt_pointer_enable_spec"):GetBool() then return end
+
+		return true
+	end)
+
+	keyhelp.RegisterKeyHelper("pointer_team", materialPointerTeam, KEYHELP_EXTRA, "label_keyhelper_pointer_team", function(client)
+		if client:IsSpec() then return end
+
+		if not GetConVar("ttt_pointer_enable_team"):GetBool() then return end
+
+		if client:GetTeam() == TEAM_NONE or client:GetSubRoleData().unknownTeam then return end
+
+		return true
+	end)
 end)
