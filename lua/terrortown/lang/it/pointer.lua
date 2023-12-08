@@ -30,6 +30,6 @@ L["label_bind_pointer_global"] = "Puntatore Globale"
 --Team: All pointers that are added by someone from your team. They have to be added as team pointers and this only works for players that aren't in the innocent team or without a team.
 --Spectator: All pointers that are added by spectators. They are only visible if you are also a spectator.]]
 
---L["label_keyhelper_pointer_global"] = "Place a global 3D pointer"
---L["label_keyhelper_pointer_team"] = "Place a team 3D pointer"
---L["label_keyhelper_pointer_spec"] = "Place a spectator team 3D pointer"
+--L["label_keyhelper_pointer_global"] = "place a global 3D pointer"
+--L["label_keyhelper_pointer_team"] = "place a team 3D pointer"
+--L["label_keyhelper_pointer_spec"] = "place a spectator team 3D pointer"

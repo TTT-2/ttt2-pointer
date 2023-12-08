@@ -30,6 +30,6 @@ Global: Alle Pointer, die von beliebigen Spielern hinzugefügt werden.
 Team: Alle Pointer, die von Teammitgliedern hinzugefügt werden. Sie müssen allerdings als Teampointer hinzugefügt werden. Dies funktioniert nur für Spieler, die ein Team haben und nicht im Team der Unschuldigen sind.
 Zuschauer: Alle Pointer, die von Zuschauern hinzugefügt werden. Sie sind nur sichtbar, wenn man selber auch Zuschauer ist.]]
 
---L["label_keyhelper_pointer_global"] = "Place a global 3D pointer"
---L["label_keyhelper_pointer_team"] = "Place a team 3D pointer"
---L["label_keyhelper_pointer_spec"] = "Place a spectator team 3D pointer"
+--L["label_keyhelper_pointer_global"] = "place a global 3D pointer"
+--L["label_keyhelper_pointer_team"] = "place a team 3D pointer"
+--L["label_keyhelper_pointer_spec"] = "place a spectator team 3D pointer"
