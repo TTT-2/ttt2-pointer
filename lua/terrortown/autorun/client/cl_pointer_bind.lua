@@ -52,7 +52,7 @@ hook.Add("TTT2FinishedLoading", "ttt2_pointer_register_binds", function()
 	end)
 
 	keyhelp.RegisterKeyHelper("pointer_team", materialPointerTeam, KEYHELP_EXTRA, "label_keyhelper_pointer_spec", function(client)
-		if client:IsSpec() and not GetConVar("ttt_pointer_enable_spec"):GetBool() then return end
+		if not client:IsSpec() or not GetConVar("ttt_pointer_enable_spec"):GetBool() then return end
 
 		return true
 	end)
